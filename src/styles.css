@@ -1,0 +1,13 @@
+.App {
+  font-family: sans-serif;
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.searchmatch {
+  background-color: yellow;
+}
