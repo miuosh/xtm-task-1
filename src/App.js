@@ -29,7 +29,6 @@ export default function App() {
 
   const handleSearchChange = ({ target }) => {
     setSearchPhrase(target.value);
-    makeDebouncedApiCall();
   };
 
   const handleReplaceTermChange = ({ target }) => {
@@ -61,6 +60,12 @@ export default function App() {
 
     setResult(newResult);
   };
+
+  useEffect(() => {
+    if (searchPhrase.length > 0) {
+      makeDebouncedApiCall();
+    }
+  }, [makeDebouncedApiCall, searchPhrase]);
 
   return (
     <div className="App">
