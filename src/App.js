@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./styles.css";
 import useDebounce from "./useDebounce";
 import axios from "axios";
-import RenderHTML from "./RenderHtml";
+import strippedString from "./strippedString";
+import RenderSnippet from "./RenderSnippet";
 
 export default function App() {
   const [searchPhrase, setSearchPhrase] = useState("");
@@ -13,13 +14,21 @@ export default function App() {
     const url = `https://en.wikipedia.org/w/api.php?&origin=*&action=query&list=search&format=json&srsearch=%22${searchPhrase}%22&srlimit=10`;
 
     try {
-      console.log("make api call");
       const response = await axios(url, {
         method: "GET",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" }
       });
-      if (response.data.query) setResult(response.data.query.search);
+
+      if (response.status >= 200 && response.status <= 302) {
+        if (response.data.query) {
+          const result = response.data.query.search.map((item) => {
+            return { ...item, snippet: strippedString(item.snippet) };
+          });
+
+          setResult(result);
+        }
+      }
     } catch (error) {
       console.error(error);
     }
@@ -29,6 +38,7 @@ export default function App() {
 
   const handleSearchChange = ({ target }) => {
     setSearchPhrase(target.value);
+    makeDebouncedApiCall();
   };
 
   const handleReplaceTermChange = ({ target }) => {
@@ -42,7 +52,10 @@ export default function App() {
     if (index >= 0) {
       const newResult = result.map((item, i) => {
         if (i === index)
-          return { ...item, snippet: item.snippet.replace(re, replaceTerm) };
+          return {
+            ...item,
+            snippet: item.snippet.replace(searchPhrase, replaceTerm)
+          };
         else return item;
       });
       setResult(newResult);
@@ -51,7 +64,6 @@ export default function App() {
 
   const handleReplaceAll = () => {
     const re = new RegExp(searchPhrase, "ig");
-
     const newResult = result.map((item) => {
       if (re.test(item.snippet)) {
         return { ...item, snippet: item.snippet.replace(re, replaceTerm) };
@@ -60,12 +72,6 @@ export default function App() {
 
     setResult(newResult);
   };
-
-  useEffect(() => {
-    if (searchPhrase.length > 0) {
-      makeDebouncedApiCall();
-    }
-  }, [makeDebouncedApiCall, searchPhrase]);
 
   return (
     <div className="App">
@@ -100,7 +106,7 @@ export default function App() {
           return (
             <article key={i}>
               <h3>{item.title}</h3>
-              <RenderHTML HTML={item.snippet} />
+              <RenderSnippet text={item.snippet} highlight={searchPhrase} />
             </article>
           );
         })}
