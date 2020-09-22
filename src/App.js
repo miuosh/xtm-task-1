@@ -54,7 +54,7 @@ export default function App() {
         if (i === index)
           return {
             ...item,
-            snippet: item.snippet.replace(searchPhrase, replaceTerm)
+            snippet: item.snippet.replace(re, replaceTerm)
           };
         else return item;
       });
